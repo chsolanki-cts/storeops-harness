@@ -40,3 +40,6 @@ Thumbs.db
 
 # TypeScript
 *.tsbuildinfo
+
+#Harness
+.harness/output/
