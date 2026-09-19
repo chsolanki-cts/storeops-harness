@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { ProgrammesRepository } from './programmes.repository';
 import { ProgrammesService } from './programmes.service';
-import { CreateProgrammeDto, UpdateProgrammeDto } from './programmes.types';
+import { AddProgrammeMemberDto, CreateProgrammeDto, UpdateProgrammeDto } from './programmes.types';
 
 export function createProgrammesRouter(): Router {
   const repo = new ProgrammesRepository();
@@ -31,6 +31,14 @@ export function createProgrammesRouter(): Router {
   router.patch('/:id', (req: Request, res: Response, next: NextFunction): void => {
     try {
       res.json(service.updateProgramme(req.params.id, req.body as UpdateProgrammeDto));
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.post('/:id/members', (req: Request, res: Response, next: NextFunction): void => {
+    try {
+      res.status(201).json(service.addMember(req.params.id, req.body as AddProgrammeMemberDto));
     } catch (err) {
       next(err);
     }
