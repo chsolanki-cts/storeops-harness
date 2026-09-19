@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { ActivitiesRepository } from './activities.repository';
 import { ActivitiesService } from './activities.service';
-import { ActivityStatus, CreateActivityDto, UpdateActivityDto } from './activities.types';
+import { ActivityStatus, BulkStatusUpdateInput, CreateActivityDto, UpdateActivityDto } from './activities.types';
 
 export function createActivitiesRouter(): Router {
   const repo = new ActivitiesRepository();
@@ -33,6 +33,14 @@ export function createActivitiesRouter(): Router {
   router.post('/', (req: Request, res: Response, next: NextFunction): void => {
     try {
       res.status(201).json(service.createActivity(req.body as CreateActivityDto));
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.patch('/bulk-status', (req: Request, res: Response, next: NextFunction): void => {
+    try {
+      res.json(service.bulkUpdateStatus(req.body as BulkStatusUpdateInput));
     } catch (err) {
       next(err);
     }

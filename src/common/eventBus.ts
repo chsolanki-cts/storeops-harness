@@ -8,6 +8,7 @@ export const Events = {
   ACTIVITY_CREATED: 'activity:created',
   ACTIVITY_UPDATED: 'activity:updated',
   ACTIVITY_DELETED: 'activity:deleted',
+  ACTIVITY_BULK_STATUS_UPDATED: 'activity:bulk_status_updated',
   PROGRAMME_CREATED: 'programme:created',
   PROGRAMME_MEMBER_ADDED: 'programme:member_added',
   ALERT_RAISED: 'alert:raised',

@@ -1,4 +1,4 @@
-export type ActivityStatus = 'pending' | 'in_progress' | 'completed' | 'cancelled';
+export type ActivityStatus = 'pending' | 'in_progress' | 'done' | 'cancelled' | 'blocked';
 export type ActivityPriority = 'low' | 'medium' | 'high' | 'critical';
 export type ActivityCategory =
   | 'restocking'
@@ -46,4 +46,35 @@ export interface UpdateActivityDto {
 export interface ListActivitiesFilters {
   programmeId?: string;
   status?: ActivityStatus;
+}
+
+export interface BulkStatusUpdateItem {
+  id: string;
+  status: 'done' | 'blocked';
+}
+
+export interface BulkStatusUpdateInput {
+  updates: BulkStatusUpdateItem[];
+  updatedBy: string;
+}
+
+export interface BulkStatusUpdateError {
+  id: string;
+  error: string;
+}
+
+export interface BulkStatusUpdateResponse {
+  total: number;
+  succeeded: number;
+  failed: number;
+  updated: Activity[];
+  errors: BulkStatusUpdateError[];
+}
+
+export interface AuditEntry {
+  id: string;
+  activityId: string;
+  status: ActivityStatus;
+  updatedBy: string;
+  timestamp: string;
 }

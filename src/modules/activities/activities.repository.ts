@@ -1,8 +1,9 @@
 import { randomUUID } from 'crypto';
-import { Activity, CreateActivityDto, ListActivitiesFilters } from './activities.types';
+import { Activity, AuditEntry, CreateActivityDto, ListActivitiesFilters } from './activities.types';
 
 export class ActivitiesRepository {
   private readonly store = new Map<string, Activity>();
+  private readonly auditStore: AuditEntry[] = [];
 
   findAll(): Activity[] {
     return Array.from(this.store.values());
@@ -55,5 +56,15 @@ export class ActivitiesRepository {
 
   delete(id: string): boolean {
     return this.store.delete(id);
+  }
+
+  createAuditEntry(entry: Omit<AuditEntry, 'id'>): AuditEntry {
+    const auditEntry: AuditEntry = { id: randomUUID(), ...entry };
+    this.auditStore.push(auditEntry);
+    return auditEntry;
+  }
+
+  findAuditEntriesByActivityId(activityId: string): AuditEntry[] {
+    return this.auditStore.filter((e) => e.activityId === activityId);
   }
 }
