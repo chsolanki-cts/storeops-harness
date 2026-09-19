@@ -60,20 +60,22 @@ Every check has a stable ID (`<Dimension>-<G|C><n>`) used in evaluator feedback 
  
 ### D2 — Architecture and StoreOps Governance (weight 30)
  
+**Dependency analysis tool**: `npm run depcruise` (`depcruise src --config .dependency-cruiser.js`) is the primary evidence source for D2-G1, D2-G2, D2-C1, and D2-C2. The config in `.dependency-cruiser.js` encodes the StoreOps module boundary rules as machine-checkable `error`-severity rules. A non-zero exit code or any `error`-severity violation in the output is a hard-gate failure for D2-G1/D2-G2. Warnings (e.g. `no-orphans`) are informational and do not affect the verdict.
+
 **Hard gates**
-| ID | Gate |
-| --- | --- |
-| D2-G1 | Dependency analysis reports a circular dependency or a direct import of another module's repository. |
-| D2-G2 | A route imports a repository directly, a repository depends on Express, or another prohibited layer direction is detected. |
-| D2-G3 | Production route or service code contains a raw `throw new Error(...)` instead of the typed `AppError` hierarchy. |
-| D2-G4 | A cross-module state change bypasses the event bus, or the `reports` module writes to an operational module. |
-| D2-G5 | A required StoreOps module lacks the route, service, repository, or domain-type layer required by policy. |
+| ID | Gate | Primary evidence command |
+| --- | --- | --- |
+| D2-G1 | `npm run depcruise` exits non-zero **or** reports an `error`-severity violation of `no-circular`, `no-cross-module-repository`, `no-common-imports-from-modules`, or `no-reports-cross-module-write`. | `npm run depcruise` |
+| D2-G2 | `npm run depcruise` reports an `error`-severity violation of `no-repository-imports-express` or `no-cross-module-service-from-routes`, **or** a manual grep finds a prohibited layer direction not covered by the configured rules. | `npm run depcruise` + `grep` |
+| D2-G3 | Production route or service code contains a raw `throw new Error(...)` instead of the typed `AppError` hierarchy. | `grep -rn "throw new Error\|throw Error" src/` |
+| D2-G4 | A cross-module state change bypasses the event bus, or the `reports` module writes to an operational module. | grep + code read |
+| D2-G5 | A required StoreOps module lacks the route, service, repository, or domain-type layer required by policy. | filesystem check |
  
 **Scored checks**
 | ID | Check | Pts | Binary criterion |
 | --- | --- | --- | --- |
-| D2-C1 | Module boundaries | 10 | PASS when the dependency graph contains zero prohibited edges and zero cycles; otherwise FAIL. |
-| D2-C2 | Layer direction | 6 | PASS when all resolved imports conform to the layer allow-list; otherwise FAIL. |
+| D2-C1 | Module boundaries | 10 | PASS when `npm run depcruise` exits 0 **and** reports zero `error`-severity violations; `warn`-only output still counts as PASS. Otherwise FAIL. |
+| D2-C2 | Layer direction | 6 | PASS when `npm run depcruise` reports zero `error`-severity violations of `no-repository-imports-express` and `no-cross-module-service-from-routes`, **and** grep finds no additional prohibited layer edges in changed files; otherwise FAIL. |
 | D2-C3 | Event-bus integration | 6 | PASS when required events are emitted with schema-valid payloads and no forbidden direct dependency exists; otherwise FAIL. NOT_APPLICABLE only if the sprint contract defines no cross-module events for the changed modules. |
 | D2-C4 | Typed errors | 5 | PASS when applicable errors are `AppError` subclasses with `code`, `message`, and `statusCode`; otherwise FAIL. |
 | D2-C5 | Read-only reports | 3 | PASS when report paths perform reads/aggregation only and invoke no write operation on operational modules; otherwise FAIL. NOT_APPLICABLE only if the change does not touch the `reports` module. |

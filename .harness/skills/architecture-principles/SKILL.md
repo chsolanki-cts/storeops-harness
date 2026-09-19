@@ -23,6 +23,21 @@ Cross-module communication follows two rules:
 Only modules that mutate state and need to notify others (`activities`, `alerts`, `programmes`) take an `EventBus` in their service constructor. `staff` mutates its own state (registration, tokens) but has no side effects to publish, so it takes no `EventBus`. `reports` is read-only/aggregation-only and takes the other modules' `Service` instances instead of an `EventBus`.
  
 No module ever imports another module's `repository.ts`, and there are no circular imports. Cross-module *type* imports (e.g. importing another module's domain type for an event payload) are fine — they're data contracts, not functional coupling. `staff` is read-only from every other module's perspective — no module calls a `StaffService` method that mutates staff state.
+
+## Dependency Analysis with dependency-cruiser
+
+The project uses [dependency-cruiser](https://github.com/sverweij/dependency-cruiser) (`npm run depcruise`) to mechanically enforce the module boundary rules above. The configuration lives in [.dependency-cruiser.js](../../../.dependency-cruiser.js) and defines the following **error-severity** StoreOps rules (on top of the standard init rules):
+
+| Rule name | What it enforces |
+| --- | --- |
+| `no-circular` | No circular dependency chains (upgraded from `warn` to `error`) |
+| `no-cross-module-repository` | A module may not import another module's `*.repository.*` — cross-module data access must go through the owning module's service |
+| `no-repository-imports-express` | Repository files must be framework-agnostic — `express` is not allowed inside a `*.repository.*` file |
+| `no-cross-module-service-from-routes` | Route files may only use services from their own module; cross-module service wiring belongs in `src/app.ts` |
+| `no-common-imports-from-modules` | `src/common/` utilities must not depend on domain modules — common code must remain generic |
+| `no-reports-cross-module-write` | The `reports` module is read-only; it must not import other modules' repositories or routes |
+
+Run `npm run depcruise` to verify the full rule set. `depcruise` exits 0 when all error-severity rules pass (warnings about orphan modules are informational). Run `npm run depcruise:graph` to generate a `dependency-graph.svg` for visual inspection (requires Graphviz `dot` on `PATH`).
  
 ## Wiring
 Wiring for all modules happens in [src/app.ts](../../../src/app.ts), which instantiates `Repository -> Service -> Routes` per module (in dependency order: `staff` and `activities`/`programmes` before `reports`), registers the event subscriptions described above, and mounts routers under `/api/<module>`. Add new modules the same way.
