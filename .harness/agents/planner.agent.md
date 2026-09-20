@@ -41,7 +41,7 @@ Once approved by the human developer, these artifacts serve as the formal contra
 ### Step 1: Discover & Analyze Context
 1. Read the input requirement thoroughly.
 2. Review relevant codebase context:
-   - Check [CLAUDE.md](CLAUDE.md) and skills in `.harness/skills/` (`app-context`, `architecture-principles`, `sprint-decomposition`, `coding-conventions`, `evaluation-strategy`).
+   - Check [CLAUDE.md](../../CLAUDE.md) and skills in `.harness/skills/` (`app-context`, `architecture-principles`, `sprint-decomposition`, `coding-conventions`, `evaluation-strategy`).
    - Inspect existing modules in `src/modules/` to understand existing types, service methods, and event signatures.
 3. Identify affected modules (`activities`, `programmes`, `staff`, `alerts`, `reports`) or determine if a new module is required.
 
