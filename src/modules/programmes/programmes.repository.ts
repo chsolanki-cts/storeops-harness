@@ -1,5 +1,5 @@
 import { randomUUID } from 'crypto';
-import { Programme, CreateProgrammeDto } from './programmes.types';
+import { Programme, CreateProgrammeDto, ProgrammeMember } from './programmes.types';
 
 export class ProgrammesRepository {
   private readonly store = new Map<string, Programme>();
@@ -23,6 +23,7 @@ export class ProgrammesRepository {
       status: 'draft',
       startDate: dto.startDate,
       endDate: dto.endDate,
+      members: [],
       createdAt: now,
       updatedAt: now,
     };
@@ -41,6 +42,18 @@ export class ProgrammesRepository {
       ...changes,
       id,
       createdAt: existing.createdAt,
+      updatedAt: new Date().toISOString(),
+    };
+    this.store.set(id, updated);
+    return updated;
+  }
+
+  addMember(id: string, member: ProgrammeMember): Programme | undefined {
+    const existing = this.store.get(id);
+    if (!existing) return undefined;
+    const updated: Programme = {
+      ...existing,
+      members: [...existing.members, member],
       updatedAt: new Date().toISOString(),
     };
     this.store.set(id, updated);

@@ -1,11 +1,20 @@
 import { randomUUID } from 'crypto';
-import { Activity, CreateActivityDto } from './activities.types';
+import { Activity, AuditEntry, CreateActivityDto, ListActivitiesFilters } from './activities.types';
 
 export class ActivitiesRepository {
   private readonly store = new Map<string, Activity>();
+  private readonly auditStore: AuditEntry[] = [];
 
   findAll(): Activity[] {
     return Array.from(this.store.values());
+  }
+
+  findByFilters(filters: ListActivitiesFilters): Activity[] {
+    return this.findAll().filter((a) => {
+      if (filters.programmeId !== undefined && a.programmeId !== filters.programmeId) return false;
+      if (filters.status !== undefined && a.status !== filters.status) return false;
+      return true;
+    });
   }
 
   findById(id: string): Activity | undefined {
@@ -17,9 +26,11 @@ export class ActivitiesRepository {
     const activity: Activity = {
       id: randomUUID(),
       storeId: dto.storeId,
+      programmeId: dto.programmeId,
       title: dto.title,
       description: dto.description,
       priority: dto.priority,
+      category: dto.category,
       status: 'pending',
       assignedTo: dto.assignedTo,
       createdAt: now,
@@ -45,5 +56,15 @@ export class ActivitiesRepository {
 
   delete(id: string): boolean {
     return this.store.delete(id);
+  }
+
+  createAuditEntry(entry: Omit<AuditEntry, 'id'>): AuditEntry {
+    const auditEntry: AuditEntry = { id: randomUUID(), ...entry };
+    this.auditStore.push(auditEntry);
+    return auditEntry;
+  }
+
+  findAuditEntriesByActivityId(activityId: string): AuditEntry[] {
+    return this.auditStore.filter((e) => e.activityId === activityId);
   }
 }
